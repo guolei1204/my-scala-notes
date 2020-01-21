@@ -1,7 +1,9 @@
 # my-scala-notes
+
 My scala notes, because I need to store them somewhere...
 
 ## Type
+
 Every variable and expression in a Scala program has a type that is known at compile time:
 
 ```bash
@@ -29,14 +31,17 @@ but not a type. 'List[A]' is a type with a free type parameter. 'List[Int]' and 
 For example, the class of type List[Int] is List. The trait of type Set[String] is Set.
 
 ## Type Constructor
+
 A type constructor is a class or trait that takes type parameters like List[A]. So List[A] is a type constructor
 because it takes a type A, but for example 'List[String]' is a concrete type.
 
 ## Type Parameter
+
 A Type Parameter is a parameter to a generic class or generic method that must be filled in by a type. For example,
 class List is defined as 'List[A]'. The 'A' is a type parameter.
 
 ## Type Parameter Variance
+
 A type parameter of a class or trait can be marked with a variance annotation, either covariant (+) or contravariant (-).
 Such variance annotations indicate how subtyping works for a generic class or trait. For example, the generic class List
 is covariant in its type parameter so its actually List[+A], and thus List[String] is a subtype of List[Any].
@@ -71,6 +76,7 @@ Lets say we create a Cage that will hold any Bird. We have some variance options
 - A contravariant cage [-A].
 
 ### An Invariant Cage so Cage[A]
+
 Lets first look at the invariant relationship:
 
 ```scala
@@ -137,6 +143,7 @@ Note that the birdCage is still of type Cage[Bird] and all the animals that it c
 will be seen as a Bird.
 
 ### A Covariant Cage
+
 The birdCage we had so far is of an Invariant type so Cage[A]. When we asked the compiler to change the type
 of the Cage to a Cage[Animal] we couldn't. It did however gave a tip, we could change the type of the Cage to
 a covariant type by putting a (+) sign before the A, so Cage[+A], lets create a covariant Cage:
@@ -209,6 +216,7 @@ scala> animalCage: Cage[Duck]
 No we cannot, because we have defined the Cage to be Covariant meaning Cage[+A].
 
 ### A Contravariant Cage
+
 Right, when we changed the Cage to a Covariant type so Cage[+A] we could change the type of the cage UPwards, meaning
 pointing to the more abstract version of the animal the Cage contained, so when we started with a Cage[Duck], we could only
 go to a Cage[Any] so UPwards. Can we define a Contravariant Cage so Cage[-A]?
@@ -281,10 +289,11 @@ The other way around however is no problem, if we are a member of a Covariant pa
 only go UPwards, we can become more generic, then a Cage[Duck] can become a Cage[Any].
 
 Each member of a parameterized type for example the constructor parameter, field, method parameter have a certain
-__position__ in the parameterized type, here Cage. When it comes to the variance of the type parameter of the parameterized type
+**position** in the parameterized type, here Cage. When it comes to the variance of the type parameter of the parameterized type
 it has some consequence. Lets look at what the consequences are.
 
 ### Type Parameter Variance Positions
+
 There seems to be a consequence for the members of a parameterized type like for example Cage when the variance of the
 type parameter is invariant, covariant (+) or contravariant (-). The possible positions and variance possibilities of
 the type parameter is as follows:
@@ -325,7 +334,7 @@ class Cage[+A] {
 ```
 
 When the variance is COVARIANT, so Cage[+A], you can do the above, you can only get AND you can have an immutable so read-only
-field. For the invariant and covariant Cage examples above, I  promoted the contructor parameter of the class to a field by
+field. For the invariant and covariant Cage examples above, I promoted the contructor parameter of the class to a field by
 adding the 'val' keyword, which creates a member in the class that can be made accessible by means of
 the [uniform access principle](http://docs.scala-lang.org/glossary/?_ga=2.245963020.901493608.1493730758-1815524523.1439721849#uniform-access-principle):
 so thats why we could call: `birdCage.animal`.
@@ -350,6 +359,7 @@ We have learned the following:
 - Class parameters don't matter
 
 ## Package objects
+
 If you come from a programming language like Java, then you know that you can organize your code in packages.
 The things you would put inside a package are classes, interfaces and enums. In the Scala language, until version 2.8
 this was basically the same so you could put classes, traits and objects inside a package. But from version 2.8 and up
@@ -374,6 +384,7 @@ Between the curly braces you can put anything you'd like such as methods and con
 these will be available without any imports to all types inside the 'foo.bar.baz' package; pretty neat huh!
 
 What package object most often are used for is to hold:
+
 - package-wide type aliases
 - implicit conversions
 - constants
@@ -386,6 +397,7 @@ definitions in the [scala.Predef](https://github.com/scala/scala/blob/v2.12.2/sr
 all the definitions in [java.lang](http://docs.oracle.com/javase/8/docs/api/java/lang/package-summary.html).
 
 ## Package chaining
+
 Package chaining or [chained package clause](http://www.artima.com/scalazine/articles/chained_package_clauses_in_scala.html)
 is a way to get parent packages into scope of your '.scala' file. Say for example that I want to create an object named
 'BazObject' in the package foo.bar.baz, and say that all the packages 'foo', 'bar' and 'baz' all three of them have a
@@ -405,7 +417,37 @@ object BazObject {
 }
 ```
 
+## Typeclass
+
+```scala
+trait Measurable[A]{
+  def measure(x: A):Double
+}
+
+object Measurable {
+  def measure(x: A)(implicit measureInstance: Measurable[A]): Double =
+    measureInstance.measure(x)
+}
+```
+
+- a **typeclass** is implemented using a trait together with a compainion object whose methods implicitly implement the trait's methods via ad hoc polymorphism.
+- An **instacne** of a typeclass is an implicit instantiation of the trait in the typeclass's implement
+- A **member** of a typeclass is any type with an instance of the typeclass
+
+## Context bounds
+
+```scala
+  object Measurable {
+    def measure[A: Measurable](x:A):Double =
+      implicitly[Measurable[A]].measure(x)
+  }
+```
+
+the constraint A: Measurable is called **counext bound**
+if you have a Measuable instance ,an implicit parameter will be passed to measure and can be retrieved within its scope by reffering to implicitly[Measureable[A]]. Thus ,the definition of measure becomes the Uppering code.
+
 ## Scala Functions
+
 Scala functions are instances of the scala.FunctionN[-T1, +R] trait. We can manually create instances
 of a function and call it:
 
@@ -439,6 +481,7 @@ res2: Int = 2
 ```
 
 ## 0-Arity Functions
+
 0-Arity functions are functions that are instances of the scala.Function0[+R] trait:
 
 ```scala
@@ -470,11 +513,11 @@ res2: Int = 1
 ```
 
 ## Scala and Thunks
+
 A thunk is a 'call-by-name' parameter. It is most often used as a lazy evaluated parameter on methods.
 Thunks are implemented (under the hood) as Function0 functions by the Scala compiler
 but the thunk itself cannot be called with a 0-Arity function. Also, the thunk must be called parameter-less,
 lets look at an example:
-
 
 ```scala
 scala> :paste
@@ -507,6 +550,7 @@ Received from thunk: 50
 ```
 
 ## How to unify method parameters and tuples
+
 Scala does not unify method parameters and tuples, for example, the following method:
 
 ```scala
@@ -541,7 +585,7 @@ scala> res1(numbers)
 res2: Int = 3
 ```
 
-The pattern of __converting a method to a function and then calling '.tupled'__ can be useful because most operations
+The pattern of **converting a method to a function and then calling '.tupled'** can be useful because most operations
 we do in practise return pairs or list of pairs:
 
 ```scala
@@ -559,6 +603,7 @@ res4: scala.collection.immutable.Vector[Int] = Vector(3, 5, 7)
 ```
 
 ## Curried functions
+
 Methods can be converted to functions like so:
 
 ```scala
@@ -595,6 +640,7 @@ res3: Int = 3
 ```
 
 ## Scalaz Validation: Parsing user input
+
 Parsing user input is easy with Scala and is provided by the class [StringLike](http://scala-lang.org/files/archive/api/current/scala/collection/immutable/StringLike.html)
 and provides methods like 'toBoolean', 'toInt', 'toLong', 'toDouble', but all of these methods can throw exceptions like NumberFormatException and IllegalArgumentException.
 
@@ -645,6 +691,7 @@ return a [scalaz.Validation](https://github.com/scalaz/scalaz/blob/v7.2.11/core/
 and the expected type on the success side.
 
 ## Creating Validation instances
+
 The companion object of [scalaz.Validation](https://github.com/scalaz/scalaz/blob/v7.2.11/core/src/main/scala/scalaz/Validation.scala) provides the following
 ways to create Validation instances:
 
@@ -705,6 +752,7 @@ res1: scalaz.ValidationNel[String,String] = Failure(NonEmpty[Name must not be em
 ```
 
 ## Using Validation results in an imperative way
+
 The [scalaz.Validation](https://github.com/scalaz/scalaz/blob/v7.2.11/core/src/main/scala/scalaz/Validation.scala) instances contain two properties
 'isSuccess' and 'isFailure' that return a boolean, so we could do the following:
 
@@ -716,6 +764,7 @@ res0: String = darn, a failure
 Of course there are better ways, lets go functional!
 
 ## Using Validation results the functional way
+
 Lets do the following, parse an electronic form that takes the user name and the user age:
 
 ```scala
@@ -766,6 +815,7 @@ res0: scalaz.Validation[scalaz.NonEmptyList[String],Person] =
 ```
 
 ## Validating a list of business rules
+
 We can use the 'traverse' method on a List of business rules to validate the person eg:
 
 ```scala
@@ -826,15 +876,16 @@ res1: scalaz.Validation[scalaz.NonEmptyList[String],Person] =
 ```
 
 ## Case Class Tricks
+
 A case class is a [scala.Product](http://www.scala-lang.org/files/archive/api/current/scala/Product.html), which
 is the base trait for all case classes and [tuples](http://www.scala-lang.org/files/archive/api/current/scala/Tuple1.html). Because both case classes and tuples are a Product type, they have access to the methods:
 
-| method | description |
-| ------ | ----------- |
-| productArity: Int | The size of this product ie. the number of types it contains eg. Person(name: String, age: Int) has an arity of 2 |
-| productElement(n: Int): Any | Returns the n-th element of the product, and is zero-based |
-| productIterator: Iterator[Any] | An iterator over the elements of the product |
-| productPrefix: String | A String used in the toString() methods of derived classes | 
+| method                         | description                                                                                                       |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| productArity: Int              | The size of this product ie. the number of types it contains eg. Person(name: String, age: Int) has an arity of 2 |
+| productElement(n: Int): Any    | Returns the n-th element of the product, and is zero-based                                                        |
+| productIterator: Iterator[Any] | An iterator over the elements of the product                                                                      |
+| productPrefix: String          | A String used in the toString() methods of derived classes                                                        |
 
 ```scala
 scala> case class Person(name: String, age: Int)
@@ -896,6 +947,7 @@ res7: scala.collection.immutable.Map[String,Any] = Map(age -> foo, name -> 42)
 ```
 
 ## Scalaz ReaderT usage
+
 A [monad transformer](http://eed3si9n.com/learning-scalaz/Monad+transformers.html) for the Reader Monad
 
 ```scala
@@ -925,7 +977,7 @@ def compose[F[_]: Monad, A: Monoid](fx: F[A], fy: F[A]): F[A] = for {
 
 compose[Id, Int](1, 2) == 3
 
-val statsFunction: (String) => StringStats = 
+val statsFunction: (String) => StringStats =
   stringStats(_ => 4, _ => true)
 
 statsFunction("abba") == StringStats(4, true)
@@ -956,11 +1008,12 @@ val statsFunctionAsync: ReaderT[Future, String, StringStats] =
     ReaderT[Future, String, Boolean](callStrPalindromeService)
   )
 
-Await.result(statsFunctionAsync("abba"), 1.second) == 
+Await.result(statsFunctionAsync("abba"), 1.second) ==
   StringStats(4, true)
 ```
 
 ## Creating and Parsing a binary String
+
 Whats really fun is converting a text String to a binary String and back again:
 
 ```scala
@@ -971,6 +1024,7 @@ Whats really fun is converting a text String to a binary String and back again:
 ```
 
 ## Scala object equality
+
 In Scala we check for object equality using '==' operator. The '==' operator
 delegates to the '.equals' method:
 
@@ -994,6 +1048,7 @@ res2: Boolean = true
 ```
 
 ## Checking for reference equality
+
 In Scala we check for reference equality using the 'eq' and 'ne' operators:
 
 ```scala
@@ -1005,13 +1060,14 @@ res1: Boolean = true
 ```
 
 ## Simple FizzBuzz example
+
 FizzBuzz can be solved in many ways, you could do the following:
 
 ```scala
 def evaluate(x: Int): String = {
   if(x % 15 == 0)
     "FizzBuzz"
-  else if(x % 3 == 0) 
+  else if(x % 3 == 0)
     "Fizz"
   else if(x % 5 == 0)
     "Buzz"
@@ -1022,7 +1078,8 @@ def evaluate(x: Int): String = {
 ```
 
 ## FizzBuzz with pattern matching
-If you like pattern matching approach: 
+
+If you like pattern matching approach:
 
 Using guards:
 
@@ -1092,6 +1149,7 @@ Stream.from(1)
 ```
 
 ## A FizzBuzz example
+
 Of course, the FizzBuzz can be solved in many ways, this is just one of many
 that uses an aggregator approach:
 
@@ -1159,6 +1217,7 @@ BuzzWoof
 ```
 
 ## FizzBuzz with Scalaz
+
 Also using an aggregator:
 
 ```scala
@@ -1168,7 +1227,7 @@ import Scalaz._
 val fizzPred = (_: Int) % 3 == 0
 val buzzPred = (_: Int) % 5 == 0
 val woofPred = (_: Int) % 7 == 0
-  
+
 val fizzTxt = (x: Boolean) => if(x) Option("Fizz") else None
 val buzzTxt = (x: Boolean) => if(x) Option("Buzz") else None
 val woofTxt = (x: Boolean) => if(x) Option("Woof") else None
@@ -1231,6 +1290,7 @@ BuzzWoof
 ```
 
 ## FizzBuzz using Scalaz Validation
+
 A solution (of many) that involves using Scalaz Validation:
 
 ```scala
@@ -1291,6 +1351,7 @@ BuzzWoof
 ```
 
 ## Finding a line in a file that is double
+
 Say, we want to find a line in a file that is double, so the line must be somewhere in the file but is double.
 Because the solution revolves around aggregating results, or 'appending', Monoids play a big role. Using a library
 like Scalaz for example, you can use the Monoids from these libraries and saves a lot of boilerplate code so the
@@ -1398,9 +1459,12 @@ The result is:
 ```bash
 res0: Option[String] = Some(Now that aint workin thats the way you do it)
 ```
+
 b
+
 ## What is the difference between a var, a val, lazy val and def?
-A __var__ is a variable. It’s a mutable reference to a value. Since it’s mutable, its value may change through the program lifetime,
+
+A **var** is a variable. It’s a mutable reference to a value. Since it’s mutable, its value may change through the program lifetime,
 making it a magnet for errors. Keep in mind that the variable type cannot change in Scala. You may say that a var behaves similarly
 to Java variables.
 
@@ -1419,7 +1483,7 @@ scala> x = "foo"
            ^
 ```
 
-A __val__ is a value. It’s an immutable reference, meaning that its value never changes. Once assigned it will always keep the same value.
+A **val** is a value. It’s an immutable reference, meaning that its value never changes. Once assigned it will always keep the same value.
 It’s similar to constants in another languages.
 
 ```scala
@@ -1431,7 +1495,7 @@ scala> x = 42
        x = 42
 ```
 
-A __def__ creates a method. It is evaluated on call.
+A **def** creates a method. It is evaluated on call.
 
 ```scala
 scala> def x: Int = { println("evaluating..."); 42 }
@@ -1446,7 +1510,7 @@ evaluating...
 res1: Int = 42
 ```
 
-A __lazy val__ is like a val, but its value is only computed when needed. It’s specially useful to avoid heavy computations at the point of the expression,
+A **lazy val** is like a val, but its value is only computed when needed. It’s specially useful to avoid heavy computations at the point of the expression,
 but delaying it until the value is actually needed. It is mostly used when doing dependency injection like with the cake pattern (lite). Lazy vals aren't
 cheap so they must be used sparingly in your code base:
 
@@ -1463,6 +1527,7 @@ res3: Int = 42
 ```
 
 ## Lazy val deadlock problem
+
 The lazy val deadlock problem is introduced when we have a cyclic dependency so a dependency that goes both ways when using lazy vals.
 For example, say we have a Foo that depends on Bar and we have a Bar that depends on Foo so Foo <-> Bar:
 
@@ -1523,6 +1588,7 @@ Of course, cyclic dependencies are sometimes bad, like with object graphs as we 
 when referencing eg. entities by UUID when we want to reference an ID in another DDD bounded context for example.
 
 ## Methods aren't functions
+
 Methods or 'def' aren't functions because methods aren't values. You can however construct a function that delegates to a method via 'eta-expansion' by
 appending an underscore after a method name or by coersing the expression by using the type system (just stating that the value must be a function) eg:
 
@@ -1548,6 +1614,7 @@ res0: List[Int] = List(2, 3, 4)
 ```
 
 ## What is the difference between a trait and an abstract class?
+
 The first difference is that a class can only extend one other class, but an unlimited number of traits:
 
 ```scala
@@ -1581,6 +1648,7 @@ IMHO, for most projects this is a non-issue as the dependency mostly goes from S
 way around. If you do, please move from Java to Scala and start having more fun!
 
 ## What is the difference between an object and a class?
+
 An object is a singleton instance of a class. It cannot be instantiated by the developer. The Scala runtime handles
 all the necessary initialization issues of the singleton issue of the class.
 
@@ -1605,6 +1673,7 @@ res5: Foo = Foo@b3fc6d8
 ```
 
 ## What is a case class?
+
 A case class is syntactic sugar for a class that is immutable and decomposable through pattern matching.
 This is because the companion object of a case class has an apply and unapply method. Being decomposable
 means it is possible to extract its constructors parameters in the pattern matching.
@@ -1644,6 +1713,7 @@ res2: String = Hi dennis, you are 42 years old!
 ```
 
 ## What is the difference between a Java future and a Scala future?
+
 The Scala implementation is asynchronous without blocking, while in Java you can’t get the future value without blocking.
 Scala provides an API to manipulate the future as a monad or by attaching callbacks for completion. Unless you decide to use the Await,
 you won’t block your program using Scala futures.
@@ -1663,6 +1733,7 @@ Await.result(result, 1.second)
 ```
 
 ## What is the difference between unapply and apply, when would you use them?
+
 The method 'unapply' is a method that needs to be implemented by an object in order for it to be an extractor.
 Extractors are used in pattern matching to access an object constructor parameters. It’s the opposite of a constructor.
 
@@ -1704,6 +1775,7 @@ PersonRepository().getById(1L)
 ```
 
 ## What is a companion object?
+
 If an object has the same name that a class, and is in the same scala file then the object is called a companion object.
 A companion object has access to methods of private visibility of the class, and the class also has access to private methods
 of the object. Doing the comparison with Java, companion objects hold the “static methods” of a class.
@@ -1711,22 +1783,25 @@ of the object. Doing the comparison with Java, companion objects hold the “sta
 Note that the companion object has to be defined in the same source file that the class.
 
 ## What is the difference between the following terms and types in Scala: Nil, Null, None, Nothing?
-The __None__ is the empty representation of the Option Monad which is represented as an Algebraic Data Type (ADT) Option[A] is either a Some[A] or a None.
+
+The **None** is the empty representation of the Option Monad which is represented as an Algebraic Data Type (ADT) Option[A] is either a Some[A] or a None.
 
 Null is a Scala trait, where null is its only instance. The null value comes from Java and it’s an instance of any object, i.e., it is a subtype of all
 reference types, but not of value types. It exists so that reference types can be assigned null and value types (like Int or Long) can’t.
 
-Nothing is another Scala trait. It’s a subtype of __any other type__, and it has no subtypes. It exists due to the complex type system Scala has.
-It has __zero__ instances. It’s the return type of a method that never returns normally, for instance, a method that always throws an exception.
+Nothing is another Scala trait. It’s a subtype of **any other type**, and it has no subtypes. It exists due to the complex type system Scala has.
+It has **zero** instances. It’s the return type of a method that never returns normally, for instance, a method that always throws an exception.
 The reason Scala has a bottom type is tied to its ability to express variance in type parameters. For example, the None is of type Option[Nothing] and the
 '.get' method of None always throws a 'NoSuchElementException'.
 
-Finally, __Nil__ represents an empty List of anything of size zero and is an object, so there is a single instance. Nil is of type List[Nothing].
+Finally, **Nil** represents an empty List of anything of size zero and is an object, so there is a single instance. Nil is of type List[Nothing].
 If you call '.head' or '.tail' on the Nil object, the methods throw an exception.
 
 ## What is Unit?
-Unit is a __type__ which represents the absence of value, just like Java void. It is a subtype of 'scala.AnyVal'. There is only one value of type Unit,
+
+Unit is a **type** which represents the absence of value, just like Java void. It is a subtype of 'scala.AnyVal'. There is only one value of type Unit,
 represented by '()', and it is not represented by any object in the underlying runtime system.
 
 ## Resources
+
 - [Scala Interview Questions](http://pedrorijo.com/blog/scala-interview-questions/)
